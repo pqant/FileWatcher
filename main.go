@@ -8,7 +8,8 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	_"time"
 	"github.com/pqant/FileWatcher/SqlUtility"
-"github.com/fsnotify/fsnotify"
+	"github.com/fsnotify/fsnotify"
+	"os"
 )
 
 var debug = flag.Bool("debug", false, "enable debugging")
@@ -48,16 +49,16 @@ func main() {
 				{
 					go func() {
 
-						if ev.Op&fsnotify.Create == fsnotify.Create {
+						if ev.Op & fsnotify.Create == fsnotify.Create {
 							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
 							defer conn.Close()
 							SqlUtility.SendToSql(conn, ev.Name, "CREATE")
-						} else if ev.Op&fsnotify.Remove == fsnotify.Remove {
+						} else if ev.Op & fsnotify.Remove == fsnotify.Remove {
 							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
 							defer conn.Close()
 							SqlUtility.SendToSql(conn, ev.Name, "DELETE")
 						}
-						log.Printf("ev -> %v - %v \n",ev.Name,ev.String())
+						log.Printf("ev -> %v - %v \n", ev.Name, ev.String())
 					}()
 				}
 			case err := <-watcher.Errors:
@@ -67,6 +68,19 @@ func main() {
 			}
 		}
 	}()
+
+
+	path := "TestDirectory"
+	if _, err := Exists(path); err == nil {
+		fmt.Printf("File or Directory exists!\n")
+	} else {
+		fmt.Printf("Error >>> %s", err.Error())
+	}
+
+	err = watcher.Add(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	err = watcher.Add("TestDirectory")
 	if err != nil {
@@ -84,4 +98,16 @@ func main() {
 
 	*/
 
+}
+
+
+func Exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
 }
