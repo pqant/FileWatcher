@@ -77,7 +77,7 @@ func main() {
 	/*
 
 	fmt.Printf("FTP Connection is testing!\n")
-	result := Ftp.FtpCheck("Pragmalinq","prg123","ftp.yapikredi.com.tr",21)
+	result := Ftp.FtpCheck("Pragmalinq","....","ftp.yapikredi.com.tr",21)
 	fmt.Printf("FTP CONNECTION RESULT : %v\n",result)
 	return
 
