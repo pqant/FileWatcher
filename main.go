@@ -19,6 +19,8 @@ var user = flag.String("user", "sa", "the database user")
 var database = flag.String("database", "FILEWATCHER", "database name")
 
 func main() {
+
+	/* Sample Comment */
 	flag.Parse()
 
 	SqlUtility.ShowConnectionInfo(&SqlUtility.DbFlagContainer{
