@@ -2,62 +2,35 @@ package main
 
 import (
 	"fmt"
-	"github.com/howeyc/fsnotify"
 	"log"
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "database/sql"
 	"flag"
+	_"github.com/pqant/FileWatcher/Ftp"
+	_ "github.com/denisenkom/go-mssqldb"
+	_"time"
+	"github.com/pqant/FileWatcher/SqlUtility"
+	"github.com/howeyc/fsnotify"
 )
 
 var debug = flag.Bool("debug", false, "enable debugging")
-var password = flag.String("password", "AAABBBCCC", "the database password")
+var password = flag.String("password", "!1q2w3e!", "the database password")
 var port *int = flag.Int("port", 1433, "the database port")
-var server = flag.String("server", "localhost", "the database server")
+var server = flag.String("server", "172.16.56.129", "the database server")
 var user = flag.String("user", "sa", "the database user")
+var database = flag.String("database", "FILEWATCHER", "database name")
 
 func main() {
-	//fmt.Printf("Sql is testing!\n")
+	flag.Parse()
 
-	//flag.Parse() // parse the command line args
-	//
-	//if *debug {
-	//	fmt.Printf(" password:%s\n", *password)
-	//	fmt.Printf(" port:%d\n", *port)
-	//	fmt.Printf(" server:%s\n", *server)
-	//	fmt.Printf(" user:%s\n", *user)
-	//}
-	//
-	//connString := fmt.Sprintf("server=%s;user id=%s;password=%s;port=%d", *server, *user, *password, *port)
-	//if *debug {
-	//	fmt.Printf(" connString:%s\n", connString)
-	//}
-	//conn, err := sql.Open("mssql", connString)
-	//if err != nil {
-	//	log.Fatal(">>> Open connection failed:\n", err.Error())
-	//}
-	//defer conn.Close()
-	//
-	//stmt, err := conn.Prepare("select 1, 'abc'")
-	//if err != nil {
-	//	log.Fatal(">>> Prepare failed:\n", err.Error())
-	//}
-	//defer stmt.Close()
-	//
-	//row := stmt.QueryRow()
-	//var somenumber int64
-	//var somechars string
-	//err = row.Scan(&somenumber, &somechars)
-	//if err != nil {
-	//	log.Fatal("Scan failed:", err.Error())
-	//}
-	//fmt.Printf("somenumber:%d\n", somenumber)
-	//fmt.Printf("somechars:%s\n", somechars)
-	//
-	//fmt.Printf("bye\n")
-	//
-	//return
+	SqlUtility.ShowConnectionInfo(&SqlUtility.DbFlagContainer{
+		Debug:debug,
+		Server:server,
+		User:user,
+		Password:password,
+		Port:port,
+		Database:database,
+	})
 
-	fmt.Println("Files are listening... \n")
+	fmt.Println("File system watcher is listening... \n")
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		log.Fatal(err)
@@ -65,27 +38,49 @@ func main() {
 
 	done := make(chan bool)
 
-	// Process events
 	go func() {
 		for {
 			select {
 			case ev := <-watcher.Event:
-				log.Println("event:", ev)
+				{
+					go func() {
+						if (ev.IsCreate()) {
+							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
+							defer conn.Close()
+							SqlUtility.SendToSql(conn, ev.Name, "CREATE")
+						} else if (ev.IsDelete()) {
+							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
+							defer conn.Close()
+							SqlUtility.SendToSql(conn, ev.Name, "DELETE")
+						} else {
+							log.Printf("ev -> %v %v %v %v \n",ev.IsCreate(),ev.IsDelete(),ev.IsModify(),ev.IsRename())
+						}
+					}()
+				}
 			case err := <-watcher.Error:
-				log.Println("error:", err)
+				{
+					log.Println("Error:", err)
+				}
 			}
 		}
 	}()
 
-	err = watcher.Watch("testDir")
+	err = watcher.Watch("TestDirectory")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Hang so program doesn't exit
 	<-done
 
-	/* ... do stuff ... */
 	watcher.Close()
+
+	/*
+
+	fmt.Printf("FTP Connection is testing!\n")
+	result := Ftp.FtpCheck("Pragmalinq","prg123","ftp.yapikredi.com.tr",21)
+	fmt.Printf("FTP CONNECTION RESULT : %v\n",result)
+	return
+
+	*/
 
 }
