@@ -20,7 +20,7 @@ var database = flag.String("database", "FILEWATCHER", "database name")
 
 func main() {
 
-	/* Sample Comment by Windows! Selam !!*/
+	/* Sample Comment by Windows! Selam ! 22 !*/
 	flag.Parse()
 
 	SqlUtility.ShowConnectionInfo(&SqlUtility.DbFlagContainer{
