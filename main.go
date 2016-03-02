@@ -8,7 +8,7 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	_"time"
 	"github.com/pqant/FileWatcher/SqlUtility"
-	"github.com/howeyc/fsnotify"
+"github.com/fsnotify/fsnotify"
 )
 
 var debug = flag.Bool("debug", false, "enable debugging")
@@ -37,29 +37,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer watcher.Close()
 
 	done := make(chan bool)
 
 	go func() {
 		for {
 			select {
-			case ev := <-watcher.Event:
+			case ev := <-watcher.Events:
 				{
 					go func() {
-						if (ev.IsCreate()) {
+
+						if ev.Op&fsnotify.Create == fsnotify.Create {
 							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
 							defer conn.Close()
 							SqlUtility.SendToSql(conn, ev.Name, "CREATE")
-						} else if (ev.IsDelete()) {
+						} else if ev.Op&fsnotify.Remove == fsnotify.Remove {
 							conn := SqlUtility.OpenConnection(debug, server, user, password, port, database)
 							defer conn.Close()
 							SqlUtility.SendToSql(conn, ev.Name, "DELETE")
-						} else {
-							log.Printf("ev -> %v %v %v %v \n",ev.IsCreate(),ev.IsDelete(),ev.IsModify(),ev.IsRename())
 						}
+						log.Printf("ev -> %v - %v \n",ev.Name,ev.String())
 					}()
 				}
-			case err := <-watcher.Error:
+			case err := <-watcher.Errors:
 				{
 					log.Println("Error:", err)
 				}
@@ -67,14 +68,12 @@ func main() {
 		}
 	}()
 
-	err = watcher.Watch("TestDirectory")
+	err = watcher.Add("TestDirectory")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	<-done
-
-	watcher.Close()
 
 	/*
 

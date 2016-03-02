@@ -50,6 +50,7 @@
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/crypto/ssh/testdata" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/cmd/callgraph/testdata" />
       <root url="file://$PROJECT_DIR$/../../../golang.org/x/tools/cmd/fiximports/testdata" />
+      <root url="file://$PROJECT_DIR$/../../fsnotify/fsnotify/.git" />
       <root url="file://$PROJECT_DIR$/../../smallfish/ftp/.git" />
       <root url="file://$PROJECT_DIR$" />
       <root url="file://$PROJECT_DIR$/../../google/shlex/.git" />
