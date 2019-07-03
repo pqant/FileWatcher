@@ -13,7 +13,7 @@ import (
 )
 
 var debug = flag.Bool("debug", false, "enable debugging")
-var password = flag.String("password", "___", "the database password")
+var password = flag.String("password", "", "the database password")
 var port *int = flag.Int("port", 1433, "the database port")
 var server = flag.String("server", "11.1.1.1", "the database server")
 var user = flag.String("user", "sa", "the database user")
@@ -21,7 +21,6 @@ var database = flag.String("database", "FILEWATCHER", "database name")
 
 func main() {
 
-	/* Sample Comment by Windows! Selam ! 22 !*/
 	flag.Parse()
 
 	SqlUtility.ShowConnectionInfo(&SqlUtility.DbFlagContainer{
